@@ -60,28 +60,21 @@ namespace AudioTranscriptionApp
 
             StatusTextBlock.Text = "Ready to record. Please enter your OpenAI API key.";
 
-            // Display Voicemeeter setup instructions
-            ShowVoicemeeterInstructions();
+            // Display app instructions
+            ShowInstructions();
         }
 
-        private void ShowVoicemeeterInstructions()
+        private void ShowInstructions()
         {
             string instructions =
-                "VOICEMEETER BANANA SETUP INSTRUCTIONS:\n\n" +
-                "1. In Voicemeeter Banana, set:\n" +
-                "   - Hardware Input 1: Your physical microphone\n" +
-                "   - Hardware Output A1: Your physical speakers/headphones\n" +
-                "   - Hardware Output A3: VB-Audio Voicemeeter VAIO\n\n" +
-                "2. In the microphone row:\n" +
-                "   - Enable A1 (to hear yourself)\n" +
-                "   - Enable A3 (to route to virtual output)\n\n" +
-                "3. In VIRTUAL INPUT row:\n" +
-                "   - Enable A1 (to hear system audio)\n" +
-                "   - Enable A3 (to route to virtual output)\n\n" +
-                "4. In Windows Sound Settings:\n" +
-                "   - Set 'Voicemeeter Input' as default playback device\n\n" +
-                "5. In this app:\n" +
-                "   - Select 'VB-Audio Voicemeeter VAIO' from the device dropdown\n";
+                "AUDIO TRANSCRIPTION APP INSTRUCTIONS:\n\n" +
+                "1. Enter your OpenAI API key in the field at the top\n" +
+                "2. Select an audio output device from the dropdown\n" +
+                "3. Click 'Start Recording' to begin capturing audio\n" +
+                "4. Audio will be transcribed in 10-second chunks\n" +
+                "5. Click 'Stop Recording' when finished\n" +
+                "6. Use 'Save Transcript' to save the text to a file\n\n" +
+                "Note: This app captures system audio from the selected device.\n";
 
             TranscriptionTextBox.Text = instructions;
         }
@@ -97,39 +90,20 @@ namespace AudioTranscriptionApp
 
                 foreach (var device in devices)
                 {
-                    // Check if it's a Voicemeeter device
-                    bool isVoicemeeter = device.FriendlyName.Contains("Voicemeeter") ||
-                                         device.FriendlyName.Contains("VB-Audio");
-
                     audioDevices.Add(new AudioDeviceInfo
                     {
                         Id = device.ID,
-                        DisplayName = isVoicemeeter ?
-                            $"◉ {device.FriendlyName} (RECOMMENDED)" :
-                            device.FriendlyName,
-                        Device = device,
-                        IsVoicemeeter = isVoicemeeter
+                        DisplayName = device.FriendlyName,
+                        Device = device
                     });
                 }
 
-                // Sort Voicemeeter devices to the top
-                var sortedDevices = audioDevices.OrderByDescending(d => d.IsVoicemeeter).ToList();
-                AudioDevicesComboBox.ItemsSource = sortedDevices;
+                AudioDevicesComboBox.ItemsSource = audioDevices;
 
-                // Try to select Voicemeeter VAIO by default
-                var voicemeeterDevice = sortedDevices.FirstOrDefault(d =>
-                    d.DisplayName.Contains("VAIO") && d.IsVoicemeeter);
-
-                if (voicemeeterDevice != null)
-                {
-                    AudioDevicesComboBox.SelectedItem = voicemeeterDevice;
-                    selectedDeviceId = voicemeeterDevice.Id;
-                    StatusTextBlock.Text = $"Selected: {voicemeeterDevice.DisplayName}";
-                }
-                else if (sortedDevices.Count > 0)
+                if (audioDevices.Count > 0)
                 {
                     AudioDevicesComboBox.SelectedIndex = 0;
-                    selectedDeviceId = sortedDevices[0].Id;
+                    selectedDeviceId = audioDevices[0].Id;
                 }
             }
             catch (Exception ex)
@@ -285,15 +259,7 @@ namespace AudioTranscriptionApp
                 var deviceInfo = audioDevices.FirstOrDefault(d => d.Id == selectedDeviceId);
                 string deviceName = deviceInfo != null ? deviceInfo.DisplayName : "Default Device";
 
-                // Add helpful message for Voicemeeter devices
-                if (deviceInfo != null && deviceInfo.IsVoicemeeter)
-                {
-                    StatusTextBlock.Text = $"Audio capture initialized with {deviceName} - This will capture both mic and system audio if Voicemeeter is configured correctly";
-                }
-                else
-                {
-                    StatusTextBlock.Text = $"Audio capture initialized with {deviceName} - This will only capture system audio";
-                }
+                StatusTextBlock.Text = $"Audio capture initialized with {deviceName} - This will capture system audio";
             }
             catch (Exception ex)
             {
@@ -504,23 +470,6 @@ namespace AudioTranscriptionApp
                 return;
             }
 
-            // Check if Voicemeeter device is selected
-            var selectedDevice = AudioDevicesComboBox.SelectedItem as AudioDeviceInfo;
-            if (selectedDevice == null || !selectedDevice.IsVoicemeeter)
-            {
-                var result = MessageBox.Show(
-                    "You haven't selected a Voicemeeter virtual output device. This won't mix your microphone with system audio.\n\n" +
-                    "Do you want to continue anyway?",
-                    "Voicemeeter Not Selected",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-
-                if (result == MessageBoxResult.No)
-                {
-                    return;
-                }
-            }
-
             if (!isRecording)
             {
                 // Initialize audio capture with selected device
@@ -644,15 +593,7 @@ namespace AudioTranscriptionApp
             if (selectedDevice != null)
             {
                 selectedDeviceId = selectedDevice.Id;
-
-                if (selectedDevice.IsVoicemeeter)
-                {
-                    StatusTextBlock.Text = $"Selected {selectedDevice.DisplayName} - This will capture both mic and system audio if Voicemeeter is configured correctly";
-                }
-                else
-                {
-                    StatusTextBlock.Text = $"Selected {selectedDevice.DisplayName} - This will only capture system audio";
-                }
+                StatusTextBlock.Text = $"Selected {selectedDevice.DisplayName} - This will capture system audio";
 
                 // If recording is in progress, we don't change the device
                 if (!isRecording)
@@ -704,7 +645,6 @@ namespace AudioTranscriptionApp
         public string Id { get; set; }
         public string DisplayName { get; set; }
         public MMDevice Device { get; set; }
-        public bool IsVoicemeeter { get; set; }
     }
 
     // Response model for OpenAI Whisper API

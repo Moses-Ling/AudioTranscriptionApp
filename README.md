@@ -5,7 +5,7 @@ A WPF desktop application that captures audio from Windows devices and transcrib
 ## Features
 
 - **Audio Capture**: Records system audio using WASAPI loopback capture
-- **Voicemeeter Integration**: Supports capturing both microphone and system audio simultaneously
+- **System Audio Capture**: Records audio output from any selected Windows audio device
 - **Real-time Transcription**: Processes audio in 10-second chunks for continuous transcription
 - **Audio Visualization**: Includes real-time audio level monitoring
 - **Flexible Device Selection**: Choose from available audio output devices
@@ -16,7 +16,6 @@ A WPF desktop application that captures audio from Windows devices and transcrib
 - Windows operating system
 - .NET Framework 4.8
 - OpenAI API key for Whisper transcription
-- Voicemeeter Banana (optional, for mixing microphone and system audio)
 
 ## Dependencies
 
@@ -31,16 +30,8 @@ A WPF desktop application that captures audio from Windows devices and transcrib
 3. Restore NuGet packages
 4. Build and run the application
 5. Enter your OpenAI API key in the application
-6. Select an audio device (Voicemeeter VAIO recommended for mixed audio)
+6. Select an audio device from the dropdown
 7. Click "Start Recording" to begin capturing and transcribing audio
-
-## Voicemeeter Setup (Optional)
-
-For capturing both microphone and system audio:
-
-1. Install [Voicemeeter Banana](https://vb-audio.com/Voicemeeter/banana.htm)
-2. Configure Voicemeeter as described in the application's instructions
-3. Select the Voicemeeter VAIO device in the application
 
 ## License
 
