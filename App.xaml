@@ -1,14 +1,9 @@
-﻿<Application x:Class="AudioTranscriptionApp.App"
+<Application x:Class="AudioTranscriptionApp.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:AudioTranscriptionApp"
-             xmlns:viewmodels="clr-namespace:AudioTranscriptionApp.ViewModels"
-             xmlns:converters="clr-namespace:AudioTranscriptionApp.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- Global Converters -->
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
-        <converters:AudioLevelToPercentConverter x:Key="AudioLevelToPercentConverter"/>
+        <!-- Global Resources -->
     </Application.Resources>
 </Application>
