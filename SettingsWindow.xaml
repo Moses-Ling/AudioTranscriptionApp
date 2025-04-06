@@ -5,41 +5,84 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioTranscriptionApp"
         mc:Ignorable="d"
-        Title="Settings" Height="300" Width="500"
+        Title="Settings"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" ShowInTaskbar="False">
+        ResizeMode="NoResize" ShowInTaskbar="False" Height="400" Width="550"> <!-- Corrected Height/Width -->
     <Grid Margin="15">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/> <!-- TabControl takes available space -->
+            <RowDefinition Height="Auto"/> <!-- Buttons -->
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- API Key -->
-        <Label Grid.Row="0" Grid.Column="0" Content="OpenAI API Key:" VerticalAlignment="Center"/>
-        <PasswordBox Grid.Row="0" Grid.Column="1" x:Name="ApiKeyBox" VerticalAlignment="Center" Margin="5"/>
+        <TabControl Grid.Row="0">
+            <!-- General Settings Tab -->
+            <TabItem Header="General">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-        <!-- Chunk Duration -->
-        <Label Grid.Row="1" Grid.Column="0" Content="Chunk Duration (sec):" VerticalAlignment="Center"/>
-        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="5">
-            <Slider x:Name="ChunkDurationSlider" Minimum="5" Maximum="60" Width="150" ValueChanged="ChunkDurationSlider_ValueChanged" TickFrequency="5" IsSnapToTickEnabled="True"/>
-            <TextBox x:Name="ChunkDurationTextBox" Width="40" Margin="10,0,0,0" Text="{Binding Value, ElementName=ChunkDurationSlider, StringFormat={}{0:N0}}" IsReadOnly="True"/>
-        </StackPanel>
+                    <!-- Whisper API Key -->
+                    <Label Grid.Row="0" Grid.Column="0" Content="Whisper API Key:" VerticalAlignment="Center"/>
+                    <PasswordBox Grid.Row="0" Grid.Column="1" x:Name="ApiKeyBox" VerticalAlignment="Center" Margin="5"/>
 
-        <!-- Default Save Path -->
-        <Label Grid.Row="2" Grid.Column="0" Content="Default Save Path:" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="2" Grid.Column="1" x:Name="SavePathTextBox" VerticalAlignment="Center" Margin="5"/>
-        <Button Grid.Row="2" Grid.Column="2" x:Name="BrowseButton" Content="..." Width="30" Margin="5" Click="BrowseButton_Click"/>
+                    <!-- Chunk Duration -->
+                    <Label Grid.Row="1" Grid.Column="0" Content="Chunk Duration (sec):" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="5">
+                        <Slider x:Name="ChunkDurationSlider" Minimum="5" Maximum="60" Width="150" ValueChanged="ChunkDurationSlider_ValueChanged" TickFrequency="5" IsSnapToTickEnabled="True"/>
+                        <TextBox x:Name="ChunkDurationTextBox" Width="40" Margin="10,0,0,0" Text="{Binding Value, ElementName=ChunkDurationSlider, StringFormat={}{0:N0}}" IsReadOnly="True"/>
+                    </StackPanel>
+
+                    <!-- Default Save Path -->
+                    <Label Grid.Row="2" Grid.Column="0" Content="Default Save Path:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="SavePathTextBox" VerticalAlignment="Center" Margin="5"/>
+                    <Button Grid.Row="2" Grid.Column="2" x:Name="BrowseButton" Content="..." Width="30" Margin="5" Click="BrowseButton_Click"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Clean Up Settings Tab -->
+            <TabItem Header="Clean Up">
+                <Grid Margin="10">
+                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Cleanup API Key -->
+                    <Label Grid.Row="0" Grid.Column="0" Content="OpenAI API Key (Cleanup):" VerticalAlignment="Center"/>
+                    <PasswordBox Grid.Row="0" Grid.Column="1" x:Name="CleanupApiKeyBox" VerticalAlignment="Center" Margin="5"/>
+
+                    <!-- Cleanup Model -->
+                    <Label Grid.Row="1" Grid.Column="0" Content="Cleanup Model:" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="CleanupModelComboBox" VerticalAlignment="Center" Margin="5">
+                        <ComboBoxItem Content="gpt-4o"/>
+                        <ComboBoxItem Content="gpt-4o-mini"/>
+                        <ComboBoxItem Content="gpt-4-turbo"/>
+                    </ComboBox>
+
+                    <!-- Cleanup Prompt -->
+                    <Label Grid.Row="2" Grid.Column="0" Content="System Prompt:" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="CleanupPromptTextBox" VerticalAlignment="Stretch" Margin="5" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="150"/> <!-- Added Height -->
+
+                </Grid>
+            </TabItem>
+        </TabControl>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button x:Name="SaveButton" Content="Save" Width="80" Margin="5" Click="SaveButton_Click" IsDefault="True"/>
             <Button x:Name="CancelButton" Content="Cancel" Width="80" Margin="5" Click="CancelButton_Click" IsCancel="True"/>
         </StackPanel>

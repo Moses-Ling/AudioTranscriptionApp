@@ -19,9 +19,9 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
             <Button x:Name="StartButton" Content="Start Recording" Width="120" Height="30" Margin="0,0,10,0" Click="StartButton_Click"/>
             <Button x:Name="StopButton" Content="Stop Recording" Width="120" Height="30" Margin="0,0,10,0" Click="StopButton_Click"/>
-            <Button x:Name="SaveButton" Content="Open Folder" Width="120" Height="30" Margin="0,0,10,0" Click="SaveButton_Click" IsEnabled="False"/> <!-- Changed Content, initially disabled -->
+            <Button x:Name="CleanupButton" Content="Clean Up" Width="120" Height="30" Margin="0,0,10,0" Click="CleanupButton_Click" IsEnabled="False"/> <!-- Renamed, Changed Content, initially disabled -->
             <Button x:Name="ClearButton" Content="Clear Transcript" Width="120" Height="30" Margin="0,0,10,0" Click="ClearButton_Click"/>
-            
+
             <!-- API Key Input Removed - Handled in Settings -->
             <Button x:Name="SettingsButton" Content="Settings" Width="80" Height="30" Click="SettingsButton_Click" Margin="10,0,0,0"/>
         </StackPanel>

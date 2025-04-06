@@ -140,6 +140,7 @@
     <Compile Include="Models\AudioDeviceModel.cs" />
     <Compile Include="Models\WhisperResponse.cs" />
     <Compile Include="Services\AudioCaptureService.cs" />
+    <Compile Include="Services\OpenAiChatService.cs" />
     <Compile Include="Services\TranscriptionService.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>

@@ -35,6 +35,13 @@ namespace AudioTranscriptionApp
 
             // Load Default Save Path
             SavePathTextBox.Text = Properties.Settings.Default.DefaultSavePath ?? string.Empty;
+
+            // Load Cleanup Settings
+            CleanupApiKeyBox.Password = EncryptionHelper.DecryptString(Properties.Settings.Default.CleanupApiKey ?? string.Empty);
+            CleanupModelComboBox.SelectedItem = FindComboBoxItem(CleanupModelComboBox, Properties.Settings.Default.CleanupModel);
+            CleanupPromptTextBox.Text = Properties.Settings.Default.CleanupPrompt ?? string.Empty;
+
+
             Logger.Info("Settings loaded into UI.");
         }
 
@@ -80,6 +87,11 @@ namespace AudioTranscriptionApp
 
                 // Save Default Save Path
                 Properties.Settings.Default.DefaultSavePath = SavePathTextBox.Text;
+
+                // Save Cleanup Settings
+                Properties.Settings.Default.CleanupApiKey = EncryptionHelper.EncryptString(CleanupApiKeyBox.Password);
+                Properties.Settings.Default.CleanupModel = (CleanupModelComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "gpt-4o-mini";
+                Properties.Settings.Default.CleanupPrompt = CleanupPromptTextBox.Text;
 
                 // Persist settings
                 Properties.Settings.Default.Save();
@@ -139,6 +151,21 @@ namespace AudioTranscriptionApp
             // The TextBox is bound to the slider value, so this handler might not be strictly necessary
             // unless you need to perform additional actions when the value changes.
             // ChunkDurationTextBox.Text = $"{e.NewValue:N0}"; // Example if not using binding
+        }
+
+        // Helper to find ComboBoxItem by content
+        private System.Windows.Controls.ComboBoxItem FindComboBoxItem(System.Windows.Controls.ComboBox comboBox, string content)
+        {
+            foreach (System.Windows.Controls.ComboBoxItem item in comboBox.Items)
+            {
+                 if (item.Content?.ToString() == content)
+                {
+                    return item;
+                }
+            }
+            // Return default if not found (or handle error)
+             Logger.Warning($"Could not find ComboBoxItem with content '{content}'. Returning first item or null.");
+             return comboBox.Items.Count > 0 ? (System.Windows.Controls.ComboBoxItem)comboBox.Items[0] : null;
         }
 
         // Helper class to wrap the WPF window handle for FolderBrowserDialog

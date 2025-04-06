@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<?xml version='1.0' encoding='utf-8'?>
+﻿﻿﻿﻿﻿<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AudioTranscriptionApp.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -11,6 +11,23 @@
     </Setting>
     <Setting Name="DefaultSavePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CleanupApiKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CleanupModel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">gpt-4o-mini</Value>
+    </Setting>
+    <Setting Name="CleanupPrompt" Type="System.String" Scope="User">
+      <Value Profile="(Default)">You are a professional transcription editor. Your task is to take a raw speech-to-text transcription of a meeting and turn it into a clean, readable text suitable for summarization. The transcription does not indicate who is speaking, and the speech-to-text engine may contain errors. Use the following guidelines:
+Use context to clarify meaning: Correct misheard or misspelled words using the surrounding context. Where needed, use your best judgment to infer what was likely said.
+Structure and clarity: Break the transcript into clear paragraphs based on shifts in topic or speaker, even though speaker labels are not available.
+Remove filler and backchanneling: Eliminate filler words like "uh," "um," "you know," "like," and short interjections such as "yeah," "mm-hmm," "ah," etc., unless essential to the meaning.
+Preserve meaning: Do not rewrite or summarize. Keep the content and flow intact—just clean up grammar, punctuation, and formatting.
+Note unclear areas: If a sentence doesn't make sense or you had to make a guess to fix it, add a comment at the end of the line in brackets, e.g., [Unclear: possibly meant... ].
+Output two sections:
+Clean Transcript – The cleaned-up version ready for summarization.
+Editor Notes – A list of sentences or phrases that were unclear or required assumption/guesswork, along with a brief note.</Value>
     </Setting>
   </Settings>
 </SettingsFile>
