@@ -1,8 +1,15 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+﻿﻿﻿﻿<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AudioTranscriptionApp.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
+    <!-- User specific settings -->
     <Setting Name="ApiKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ChunkDurationSeconds" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="DefaultSavePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

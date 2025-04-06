@@ -16,7 +16,7 @@ namespace AudioTranscriptionApp.Services
         private string _tempFilePath;
         private bool _isRecording = false;
         private DateTime _recordingStartTime;
-        private readonly int _audioChunkSeconds = 10; // Process in 10-second chunks
+        private int _audioChunkSeconds; // Process in configurable chunks
         private readonly TranscriptionService _transcriptionService;
 
         // Audio level monitoring
@@ -35,6 +35,11 @@ namespace AudioTranscriptionApp.Services
         public AudioCaptureService(TranscriptionService transcriptionService)
         {
             _transcriptionService = transcriptionService;
+            // Load chunk duration from settings
+            _audioChunkSeconds = Properties.Settings.Default.ChunkDurationSeconds;
+            // Add validation if needed (e.g., ensure it's within 5-60 range)
+            if (_audioChunkSeconds < 5) _audioChunkSeconds = 5;
+            if (_audioChunkSeconds > 60) _audioChunkSeconds = 60;
         }
 
         public List<AudioDeviceModel> GetAudioDevices()

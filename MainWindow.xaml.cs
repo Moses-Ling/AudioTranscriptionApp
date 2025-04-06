@@ -1,11 +1,12 @@
-﻿﻿﻿using AudioTranscriptionApp.Models;
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using AudioTranscriptionApp.Models;
 using AudioTranscriptionApp.Services;
-using AudioTranscriptionApp.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -67,10 +68,12 @@ namespace AudioTranscriptionApp
             // Try to load API key from settings if available
             try
             {
-                ApiKeyBox.Password = Properties.Settings.Default.ApiKey ?? string.Empty;
-                if (!string.IsNullOrEmpty(ApiKeyBox.Password))
+                string encryptedApiKey = Properties.Settings.Default.ApiKey ?? string.Empty;
+                string decryptedApiKey = DecryptString(encryptedApiKey);
+                ApiKeyBox.Password = decryptedApiKey; // Set the UI element
+                if (!string.IsNullOrEmpty(decryptedApiKey))
                 {
-                    _transcriptionService.UpdateApiKey(ApiKeyBox.Password);
+                    _transcriptionService.UpdateApiKey(decryptedApiKey); // Update the service
                 }
             }
             catch
@@ -81,6 +84,48 @@ namespace AudioTranscriptionApp
             // Show instructions
             ShowInstructions();
         }
+
+        // --- Encryption/Decryption Helpers ---
+        private static readonly byte[] s_entropy = Encoding.Unicode.GetBytes("AudioAppSalt"); // Optional extra entropy
+
+        private static string EncryptString(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+            byte[] encryptedData = ProtectedData.Protect(
+                Encoding.Unicode.GetBytes(input),
+                s_entropy,
+                DataProtectionScope.CurrentUser);
+            return Convert.ToBase64String(encryptedData);
+        }
+
+        private static string DecryptString(string encryptedData)
+        {
+            if (string.IsNullOrEmpty(encryptedData)) return string.Empty;
+            try
+            {
+                byte[] decryptedData = ProtectedData.Unprotect(
+                    Convert.FromBase64String(encryptedData),
+                    s_entropy,
+                    DataProtectionScope.CurrentUser);
+                return Encoding.Unicode.GetString(decryptedData);
+            }
+            catch (CryptographicException)
+            {
+                // Handle cases where decryption fails (e.g., data corruption, moved to different user)
+                Properties.Settings.Default.ApiKey = string.Empty; // Clear invalid key
+                Properties.Settings.Default.Save();
+                MessageBox.Show("API Key could not be decrypted. It might be corrupted or from a different user profile. Please re-enter your API key.", "Decryption Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return string.Empty;
+            }
+            catch (FormatException) // Handle invalid Base64 string
+            {
+                 Properties.Settings.Default.ApiKey = string.Empty; // Clear invalid key
+                 Properties.Settings.Default.Save();
+                 MessageBox.Show("Stored API Key format is invalid. Please re-enter your API key.", "Format Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                 return string.Empty;
+            }
+        }
+        // --- End Encryption/Decryption Helpers ---
 
         private void ShowInstructions()
         {
@@ -203,10 +248,10 @@ namespace AudioTranscriptionApp
         {
             _transcriptionService.UpdateApiKey(ApiKeyBox.Password);
             
-            // Try to save API key to settings
+            // Try to save API key to settings (encrypted)
             try
             {
-                Properties.Settings.Default.ApiKey = ApiKeyBox.Password;
+                Properties.Settings.Default.ApiKey = EncryptString(ApiKeyBox.Password);
                 Properties.Settings.Default.Save();
             }
             catch
