@@ -34,22 +34,25 @@ namespace AudioTranscriptionApp.Services
 
         public AudioCaptureService(TranscriptionService transcriptionService)
         {
+            Logger.Info("AudioCaptureService initializing.");
             _transcriptionService = transcriptionService;
             // Load chunk duration from settings
             _audioChunkSeconds = Properties.Settings.Default.ChunkDurationSeconds;
             // Add validation if needed (e.g., ensure it's within 5-60 range)
             if (_audioChunkSeconds < 5) _audioChunkSeconds = 5;
             if (_audioChunkSeconds > 60) _audioChunkSeconds = 60;
+            Logger.Info($"Using audio chunk duration: {_audioChunkSeconds} seconds.");
         }
 
         public List<AudioDeviceModel> GetAudioDevices()
         {
             var audioDevices = new List<AudioDeviceModel>();
+            Logger.Info("Getting audio devices...");
             var deviceEnumerator = new MMDeviceEnumerator();
 
             try
             {
-                // Get all audio output devices
+                 // Get all audio output devices
                 var devices = deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
 
                 foreach (var device in devices)
@@ -64,24 +67,29 @@ namespace AudioTranscriptionApp.Services
             }
             catch (Exception ex)
             {
+                Logger.Error("Failed to enumerate audio devices.", ex);
                 ErrorOccurred?.Invoke(this, ex);
             }
 
+            Logger.Info($"Found {audioDevices.Count} active audio devices.");
             return audioDevices;
         }
 
         public void InitializeAudioCapture(string deviceId)
         {
+            Logger.Info($"Initializing audio capture for device ID: {deviceId ?? "Default"}");
             try
             {
-                // Clean up existing capture if any
+                 // Clean up existing capture if any
                 if (_capture != null)
                 {
                     if (_isRecording)
                     {
+                        Logger.Info("Stopping existing recording during re-initialization.");
                         _capture.StopRecording();
                     }
 
+                    Logger.Info("Disposing previous capture instance.");
                     _capture.Dispose();
                     _capture = null;
                 }
@@ -117,21 +125,24 @@ namespace AudioTranscriptionApp.Services
                 string deviceName = deviceInfo != null ? deviceInfo.DisplayName : "Default Device";
 
                 StatusChanged?.Invoke(this, $"Audio capture initialized with {deviceName} - This will capture system audio");
+                Logger.Info($"Audio capture successfully initialized with {deviceName}.");
             }
             catch (Exception ex)
             {
+                Logger.Error($"Failed to initialize audio capture for device ID: {deviceId ?? "Default"}", ex);
                 ErrorOccurred?.Invoke(this, ex);
             }
         }
 
         public void StartRecording()
         {
+            Logger.Info("Attempting to start recording.");
             if (!_isRecording && _capture != null)
             {
-                _isRecording = true;
-                CreateNewAudioFile();
+                 _isRecording = true;
+                 CreateNewAudioFile(); // Creates the initial temp file
 
-                try
+                 try
                 {
                     // Reset audio levels
                     _currentAudioLevel = 0;
@@ -139,14 +150,17 @@ namespace AudioTranscriptionApp.Services
                     AudioLevelChanged?.Invoke(this, 0);
 
                     // Start recording
+                    Logger.Info("Calling _capture.StartRecording().");
                     _capture.StartRecording();
 
                     _recordingStartTime = DateTime.Now;
 
                     StatusChanged?.Invoke(this, "Recording and transcribing...");
+                    Logger.Info("Recording started successfully.");
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("Failed to start recording.", ex);
                     _isRecording = false;
                     ErrorOccurred?.Invoke(this, ex);
                 }
@@ -155,9 +169,11 @@ namespace AudioTranscriptionApp.Services
 
         public void StopRecording()
         {
+            Logger.Info("Attempting to stop recording.");
             if (_isRecording && _capture != null)
             {
-                _capture.StopRecording();
+                 Logger.Info("Calling _capture.StopRecording().");
+                 _capture.StopRecording();
                 // The RecordingStopped event will handle cleanup
             }
         }
@@ -176,6 +192,7 @@ namespace AudioTranscriptionApp.Services
                 TimeSpan elapsed = DateTime.Now - _recordingStartTime;
                 if (elapsed.TotalSeconds >= _audioChunkSeconds)
                 {
+                    // Logger.Info($"Audio chunk duration ({_audioChunkSeconds}s) reached. Processing chunk."); // Too verbose
                     ProcessCurrentAudioChunk();
                 }
             }
@@ -251,24 +268,33 @@ namespace AudioTranscriptionApp.Services
         {
             // Close the current writer
             var fileToProcess = _tempFilePath;
+            Logger.Info($"Closing current audio chunk file: {fileToProcess}");
             _writer.Close();
             _writer = null;
 
-            // Start a new recording segment
-            CreateNewAudioFile();
+            // Start a new recording segment if still recording
+            if (_isRecording)
+            {
+                CreateNewAudioFile(); // Creates the next temp file
+            }
 
             // Process the completed chunk in the background
+            Logger.Info($"Queueing chunk for transcription: {fileToProcess}");
             Task.Run(async () =>
             {
+                string statusMsg = $"Transcribing chunk {Path.GetFileName(fileToProcess)}...";
+                StatusChanged?.Invoke(this, statusMsg);
                 try
                 {
-                    StatusChanged?.Invoke(this, "Transcribing audio...");
-                    string transcriptionText = await _transcriptionService.TranscribeAudioFileAsync(fileToProcess);
+                    string transcriptionText = await _transcriptionService.TranscribeAudioFileAsync(fileToProcess); // Deletes file internally
                     TranscriptionReceived?.Invoke(this, transcriptionText);
-                    StatusChanged?.Invoke(this, _isRecording ? "Recording and transcribing..." : "Transcription complete.");
+                    Logger.Info($"Transcription successful for chunk: {fileToProcess}");
+                    // Update status only if recording is ongoing, otherwise Stop handler updates it
+                    if (_isRecording) StatusChanged?.Invoke(this, "Recording and transcribing...");
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error($"Transcription failed for chunk: {fileToProcess}", ex);
                     ErrorOccurred?.Invoke(this, ex);
                 }
             });
@@ -276,71 +302,99 @@ namespace AudioTranscriptionApp.Services
 
         private void CreateNewAudioFile()
         {
-            _tempFilePath = Path.Combine(Path.GetTempPath(), $"audio_chunk_{DateTime.Now.Ticks}.wav");
-            _writer = new WaveFileWriter(_tempFilePath, _capture.WaveFormat);
-            _recordingStartTime = DateTime.Now;
+            try
+            {
+                _tempFilePath = Path.Combine(Path.GetTempPath(), $"audio_chunk_{DateTime.Now.Ticks}.wav");
+                _writer = new WaveFileWriter(_tempFilePath, _capture.WaveFormat);
+                _recordingStartTime = DateTime.Now;
+                Logger.Info($"Created new audio chunk file: {_tempFilePath}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Failed to create new audio chunk file.", ex);
+                ErrorOccurred?.Invoke(this, ex);
+                // Consider stopping recording if file creation fails
+                StopRecording();
+            }
         }
 
         private void Capture_RecordingStopped(object sender, StoppedEventArgs e)
         {
+            Logger.Info("Capture_RecordingStopped event received.");
             if (_writer != null)
             {
-                // Process any remaining audio
+                 // Process any remaining audio
                 var fileToProcess = _tempFilePath;
                 _writer.Close();
                 _writer = null;
 
-                Task.Run(async () =>
+            Task.Run(async () =>
+            {
+                string statusMsg = $"Transcribing final chunk {Path.GetFileName(fileToProcess)}...";
+                StatusChanged?.Invoke(this, statusMsg);
+                try
                 {
-                    try
-                    {
-                        StatusChanged?.Invoke(this, "Transcribing final audio chunk...");
-                        string transcriptionText = await _transcriptionService.TranscribeAudioFileAsync(fileToProcess);
-                        TranscriptionReceived?.Invoke(this, transcriptionText);
-                        StatusChanged?.Invoke(this, "Transcription complete.");
+                    Logger.Info($"Queueing final chunk for transcription: {fileToProcess}");
+                    string transcriptionText = await _transcriptionService.TranscribeAudioFileAsync(fileToProcess); // Deletes file internally
+                    TranscriptionReceived?.Invoke(this, transcriptionText);
+                    Logger.Info($"Transcription successful for final chunk: {fileToProcess}");
+                    StatusChanged?.Invoke(this, "Transcription complete."); // Final status update
                     }
-                    catch (Exception ex)
-                    {
-                        ErrorOccurred?.Invoke(this, ex);
+                catch (Exception ex)
+                {
+                    Logger.Error($"Transcription failed for final chunk: {fileToProcess}", ex);
+                    ErrorOccurred?.Invoke(this, ex);
                     }
                 });
             }
 
             _isRecording = false;
-            StatusChanged?.Invoke(this, "Recording stopped.");
+            // Status is updated after final chunk processing now
+            // StatusChanged?.Invoke(this, "Recording stopped. Processing final chunk...");
             AudioLevelChanged?.Invoke(this, 0);
 
             if (e.Exception != null)
             {
+                Logger.Error("Recording stopped with exception.", e.Exception);
                 ErrorOccurred?.Invoke(this, e.Exception);
             }
         }
 
         public void Dispose()
         {
+            Logger.Info("Disposing AudioCaptureService resources.");
             // Clean up resources
             if (_isRecording)
             {
-                _capture?.StopRecording();
+                 Logger.Warning("Dispose called while still recording. Stopping capture.");
+                 _capture?.StopRecording();
             }
 
             if (_writer != null)
             {
+                Logger.Info("Closing wave writer during dispose.");
                 _writer.Close();
                 _writer = null;
             }
 
+            Logger.Info("Disposing capture object.");
             _capture?.Dispose();
 
-            // Clean up any temporary files
+            // Clean up any temporary files (TranscriptionService also does this, but belt-and-suspenders)
             try
             {
+                // Check if the last known temp file exists (it might have been processed already)
                 if (!string.IsNullOrEmpty(_tempFilePath) && File.Exists(_tempFilePath))
                 {
+                    Logger.Info($"Deleting leftover temp file during dispose: {_tempFilePath}");
                     File.Delete(_tempFilePath);
                 }
             }
-            catch { /* Ignore cleanup errors */ }
+            catch (Exception ex)
+            {
+                Logger.Warning($"Ignoring error during temp file cleanup on dispose: {ex.Message}");
+                /* Ignore cleanup errors */
+            }
         }
     }
 }
