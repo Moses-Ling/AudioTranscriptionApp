@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Settings"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" ShowInTaskbar="False" Height="400" Width="550"> <!-- Corrected Height/Width -->
+        ResizeMode="NoResize" ShowInTaskbar="False" Height="450" Width="550"> <!-- Increased Height -->
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/> <!-- TabControl takes available space -->
@@ -137,15 +137,16 @@
             </TabItem>
 
             <!-- About Tab -->
-            <TabItem Header="About">
-                <StackPanel Margin="10">
-                    <Image Source="clio_ai_icon.ico" Width="48" Height="48" HorizontalAlignment="Left" Margin="0,0,0,10"/> <!-- Added Icon -->
-                    <TextBlock FontWeight="Bold" FontSize="16" Text="ClioAi"/> <!-- Updated Name -->
+            <TabItem Header="About" GotFocus="AboutTab_GotFocus"> <!-- Added GotFocus -->
+                <ScrollViewer x:Name="AboutScrollViewer" VerticalScrollBarVisibility="Auto"> <!-- Added Name & ScrollViewer -->
+                    <StackPanel Margin="10">
+                        <Image Source="icon.png" Width="48" Height="48" HorizontalAlignment="Left" Margin="0,0,0,10"/> <!-- Changed Icon Source -->
+                        <TextBlock FontWeight="Bold" FontSize="16" Text="ClioAi"/> <!-- Updated Name -->
                     <TextBlock x:Name="VersionTextBlock" Text="Version: X.Y.Z" Margin="0,5,0,5"/>
                     <TextBlock Text="Copyright (c) 2025 Moses Ling" Margin="0,0,0,10"/> <!-- Updated -->
 
                     <TextBlock Text="Development Credits:" Margin="0,10,0,5" FontWeight="SemiBold"/>
-                    <TextBlock Text="- Code Generator: Cline (Anthropic)" Margin="10,0,0,0"/>
+                    <TextBlock Text="- Code Assistant: Cline (Anthropic)" Margin="10,0,0,0"/> <!-- Updated Text -->
                     <TextBlock Text="- LLM: Gemini 2.5 Pro (Google)" Margin="10,0,0,10"/>
 
                     <TextBlock Text="This application uses the following open-source libraries:" Margin="0,10,0,5" FontWeight="SemiBold"/>
@@ -156,7 +157,8 @@
                     <TextBlock Text="This software is licensed under the MIT License." Margin="0,10,0,5"/>
                     <Button x:Name="ViewLicenseButton" Content="View Full License Text" HorizontalAlignment="Left" Click="ViewLicenseButton_Click"/>
 
-                </StackPanel>
+                    </StackPanel>
+                </ScrollViewer> <!-- End ScrollViewer -->
             </TabItem>
 
         </TabControl>

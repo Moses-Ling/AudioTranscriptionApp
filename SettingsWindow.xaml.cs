@@ -236,9 +236,11 @@ namespace AudioTranscriptionApp
         {
             try
             {
-                // Assuming LICENSE file is in the same directory as the executable
+                // LICENSE file is in the project root, executable is likely in bin/Debug or bin/Release
                 string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                string licenseFilePath = Path.Combine(baseDirectory, "LICENSE");
+                // Go up two levels (e.g., from bin/Debug to project root)
+                string projectRoot = Path.GetFullPath(Path.Combine(baseDirectory, @"..\..\"));
+                string licenseFilePath = Path.Combine(projectRoot, "LICENSE");
 
                 if (File.Exists(licenseFilePath))
                 {
@@ -259,6 +261,11 @@ namespace AudioTranscriptionApp
         }
         // --- End About Tab Logic ---
 
+        private void AboutTab_GotFocus(object sender, RoutedEventArgs e)
+        {
+            // Ensure the scroll viewer is at the top when the tab gets focus
+            AboutScrollViewer?.ScrollToTop();
+        }
 
         // Helper to find ComboBoxItem by content
         private System.Windows.Controls.ComboBoxItem FindComboBoxItem(System.Windows.Controls.ComboBox comboBox, string content)
