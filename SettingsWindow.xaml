@@ -32,7 +32,15 @@
 
                     <!-- Whisper API Key -->
                     <Label Grid.Row="0" Grid.Column="0" Content="Whisper API Key:" VerticalAlignment="Center"/>
-                    <PasswordBox Grid.Row="0" Grid.Column="1" x:Name="ApiKeyBox" VerticalAlignment="Center" Margin="5"/>
+                    <Grid Grid.Row="0" Grid.Column="1" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="ApiKeyBox" VerticalAlignment="Center" />
+                        <TextBox x:Name="ApiKeyTextBox" VerticalAlignment="Center" Visibility="Collapsed"/>
+                        <CheckBox Grid.Column="1" x:Name="ShowApiKeyCheckBox" Content="Show" VerticalAlignment="Center" Margin="5,0,0,0" Checked="ShowApiKeyCheckBox_Checked" Unchecked="ShowApiKeyCheckBox_Unchecked"/>
+                    </Grid>
 
                     <!-- Chunk Duration -->
                     <Label Grid.Row="1" Grid.Column="0" Content="Chunk Duration (sec):" VerticalAlignment="Center"/>
@@ -63,7 +71,15 @@
 
                     <!-- Cleanup API Key -->
                     <Label Grid.Row="0" Grid.Column="0" Content="OpenAI API Key (Cleanup):" VerticalAlignment="Center"/>
-                    <PasswordBox Grid.Row="0" Grid.Column="1" x:Name="CleanupApiKeyBox" VerticalAlignment="Center" Margin="5"/>
+                     <Grid Grid.Row="0" Grid.Column="1" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="CleanupApiKeyBox" VerticalAlignment="Center" />
+                        <TextBox x:Name="CleanupApiKeyTextBox" VerticalAlignment="Center" Visibility="Collapsed"/>
+                        <CheckBox Grid.Column="1" x:Name="ShowCleanupApiKeyCheckBox" Content="Show" VerticalAlignment="Center" Margin="5,0,0,0" Checked="ShowCleanupApiKeyCheckBox_Checked" Unchecked="ShowCleanupApiKeyCheckBox_Unchecked"/>
+                    </Grid>
 
                     <!-- Cleanup Model -->
                     <Label Grid.Row="1" Grid.Column="0" Content="Cleanup Model:" VerticalAlignment="Center"/>
@@ -79,6 +95,70 @@
 
                 </Grid>
             </TabItem>
+
+             <!-- Summarize Settings Tab -->
+            <TabItem Header="Summarize">
+                <Grid Margin="10">
+                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Summarize API Key -->
+                    <Label Grid.Row="0" Grid.Column="0" Content="OpenAI API Key (Summarize):" VerticalAlignment="Center"/>
+                     <Grid Grid.Row="0" Grid.Column="1" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="SummarizeApiKeyBox" VerticalAlignment="Center" />
+                        <TextBox x:Name="SummarizeApiKeyTextBox" VerticalAlignment="Center" Visibility="Collapsed"/>
+                        <CheckBox Grid.Column="1" x:Name="ShowSummarizeApiKeyCheckBox" Content="Show" VerticalAlignment="Center" Margin="5,0,0,0" Checked="ShowSummarizeApiKeyCheckBox_Checked" Unchecked="ShowSummarizeApiKeyCheckBox_Unchecked"/>
+                    </Grid>
+
+                    <!-- Summarize Model -->
+                    <Label Grid.Row="1" Grid.Column="0" Content="Summarize Model:" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="SummarizeModelComboBox" VerticalAlignment="Center" Margin="5">
+                        <ComboBoxItem Content="gpt-4o"/>
+                        <ComboBoxItem Content="gpt-4o-mini"/>
+                        <ComboBoxItem Content="gpt-4-turbo"/>
+                    </ComboBox>
+
+                    <!-- Summarize Prompt -->
+                    <Label Grid.Row="2" Grid.Column="0" Content="System Prompt:" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="SummarizePromptTextBox" VerticalAlignment="Stretch" Margin="5" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="150"/>
+
+                </Grid>
+            </TabItem>
+
+            <!-- About Tab -->
+            <TabItem Header="About">
+                <StackPanel Margin="10">
+                    <Image Source="clio_ai_icon.ico" Width="48" Height="48" HorizontalAlignment="Left" Margin="0,0,0,10"/> <!-- Added Icon -->
+                    <TextBlock FontWeight="Bold" FontSize="16" Text="ClioAi"/> <!-- Updated Name -->
+                    <TextBlock x:Name="VersionTextBlock" Text="Version: X.Y.Z" Margin="0,5,0,5"/>
+                    <TextBlock Text="Copyright (c) 2025 Moses Ling" Margin="0,0,0,10"/> <!-- Updated -->
+
+                    <TextBlock Text="Development Credits:" Margin="0,10,0,5" FontWeight="SemiBold"/>
+                    <TextBlock Text="- Code Generator: Cline (Anthropic)" Margin="10,0,0,0"/>
+                    <TextBlock Text="- LLM: Gemini 2.5 Pro (Google)" Margin="10,0,0,10"/>
+
+                    <TextBlock Text="This application uses the following open-source libraries:" Margin="0,10,0,5" FontWeight="SemiBold"/>
+                    <TextBlock Text="- NAudio (Ms-PL License)" Margin="10,0,0,0"/>
+                    <TextBlock Text="- Newtonsoft.Json (MIT License)" Margin="10,0,0,0"/>
+                    <TextBlock Text="- Markdig (BSD 2-Clause License)" Margin="10,0,0,10"/>
+
+                    <TextBlock Text="This software is licensed under the MIT License." Margin="0,10,0,5"/>
+                    <Button x:Name="ViewLicenseButton" Content="View Full License Text" HorizontalAlignment="Left" Click="ViewLicenseButton_Click"/>
+
+                </StackPanel>
+            </TabItem>
+
         </TabControl>
 
         <!-- Buttons -->

@@ -2,8 +2,9 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-// Need this for FolderBrowserDialog
 using System.Windows.Forms; // Requires reference to System.Windows.Forms assembly
+using System.Reflection; // For Assembly version
+using System.Diagnostics; // For Process.Start
 
 namespace AudioTranscriptionApp
 {
@@ -17,29 +18,51 @@ namespace AudioTranscriptionApp
             InitializeComponent();
             Logger.Info("Settings window opened.");
             LoadSettings();
+            DisplayVersion(); // Display version info
         }
+
+        private void DisplayVersion()
+        {
+            try
+            {
+                var version = Assembly.GetExecutingAssembly().GetName().Version;
+                VersionTextBlock.Text = $"Version: {version?.Major}.{version?.Minor}.{version?.Build}";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Failed to get assembly version.", ex);
+                VersionTextBlock.Text = "Version: Unknown";
+            }
+        }
+
 
         private void LoadSettings()
         {
-            // Load API Key (decrypt)
+            // Load General Settings
             string encryptedApiKey = Properties.Settings.Default.ApiKey ?? string.Empty;
             ApiKeyBox.Password = EncryptionHelper.DecryptString(encryptedApiKey);
+            ApiKeyTextBox.Text = ApiKeyBox.Password; // Sync textbox initially
 
-            // Load Chunk Duration
             int chunkDuration = Properties.Settings.Default.ChunkDurationSeconds;
-            // Ensure value is within slider bounds
             if (chunkDuration < ChunkDurationSlider.Minimum) chunkDuration = (int)ChunkDurationSlider.Minimum;
             if (chunkDuration > ChunkDurationSlider.Maximum) chunkDuration = (int)ChunkDurationSlider.Maximum;
             ChunkDurationSlider.Value = chunkDuration;
-            // TextBox is bound to Slider, no need to set it directly
 
-            // Load Default Save Path
             SavePathTextBox.Text = Properties.Settings.Default.DefaultSavePath ?? string.Empty;
 
             // Load Cleanup Settings
-            CleanupApiKeyBox.Password = EncryptionHelper.DecryptString(Properties.Settings.Default.CleanupApiKey ?? string.Empty);
+            string encryptedCleanupKey = Properties.Settings.Default.CleanupApiKey ?? string.Empty;
+            CleanupApiKeyBox.Password = EncryptionHelper.DecryptString(encryptedCleanupKey);
+            CleanupApiKeyTextBox.Text = CleanupApiKeyBox.Password; // Sync textbox initially
             CleanupModelComboBox.SelectedItem = FindComboBoxItem(CleanupModelComboBox, Properties.Settings.Default.CleanupModel);
             CleanupPromptTextBox.Text = Properties.Settings.Default.CleanupPrompt ?? string.Empty;
+
+            // Load Summarize Settings
+            string encryptedSummarizeKey = Properties.Settings.Default.SummarizeApiKey ?? string.Empty;
+            SummarizeApiKeyBox.Password = EncryptionHelper.DecryptString(encryptedSummarizeKey);
+            SummarizeApiKeyTextBox.Text = SummarizeApiKeyBox.Password; // Sync textbox initially
+            SummarizeModelComboBox.SelectedItem = FindComboBoxItem(SummarizeModelComboBox, Properties.Settings.Default.SummarizeModel);
+            SummarizePromptTextBox.Text = Properties.Settings.Default.SummarizePrompt ?? string.Empty;
 
 
             Logger.Info("Settings loaded into UI.");
@@ -79,19 +102,23 @@ namespace AudioTranscriptionApp
                 }
 
 
-                // Save API Key (encrypt)
-                Properties.Settings.Default.ApiKey = EncryptionHelper.EncryptString(ApiKeyBox.Password);
-
-                // Save Chunk Duration
+                // Save General Settings (Get key from visible control)
+                string whisperKey = ShowApiKeyCheckBox.IsChecked == true ? ApiKeyTextBox.Text : ApiKeyBox.Password;
+                Properties.Settings.Default.ApiKey = EncryptionHelper.EncryptString(whisperKey);
                 Properties.Settings.Default.ChunkDurationSeconds = (int)ChunkDurationSlider.Value;
-
-                // Save Default Save Path
                 Properties.Settings.Default.DefaultSavePath = SavePathTextBox.Text;
 
-                // Save Cleanup Settings
-                Properties.Settings.Default.CleanupApiKey = EncryptionHelper.EncryptString(CleanupApiKeyBox.Password);
+                // Save Cleanup Settings (Get key from visible control)
+                string cleanupKey = ShowCleanupApiKeyCheckBox.IsChecked == true ? CleanupApiKeyTextBox.Text : CleanupApiKeyBox.Password;
+                Properties.Settings.Default.CleanupApiKey = EncryptionHelper.EncryptString(cleanupKey);
                 Properties.Settings.Default.CleanupModel = (CleanupModelComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "gpt-4o-mini";
                 Properties.Settings.Default.CleanupPrompt = CleanupPromptTextBox.Text;
+
+                // Save Summarize Settings (Get key from visible control)
+                string summarizeKey = ShowSummarizeApiKeyCheckBox.IsChecked == true ? SummarizeApiKeyTextBox.Text : SummarizeApiKeyBox.Password;
+                Properties.Settings.Default.SummarizeApiKey = EncryptionHelper.EncryptString(summarizeKey);
+                Properties.Settings.Default.SummarizeModel = (SummarizeModelComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "gpt-4o"; // Changed default fallback
+                Properties.Settings.Default.SummarizePrompt = SummarizePromptTextBox.Text;
 
                 // Persist settings
                 Properties.Settings.Default.Save();
@@ -150,8 +177,88 @@ namespace AudioTranscriptionApp
         {
             // The TextBox is bound to the slider value, so this handler might not be strictly necessary
             // unless you need to perform additional actions when the value changes.
-            // ChunkDurationTextBox.Text = $"{e.NewValue:N0}"; // Example if not using binding
         }
+
+        // --- API Key Visibility Toggle Handlers ---
+
+        private void ShowApiKeyCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            ApiKeyTextBox.Text = ApiKeyBox.Password;
+            ApiKeyTextBox.Visibility = Visibility.Visible;
+            ApiKeyBox.Visibility = Visibility.Collapsed;
+            ShowApiKeyCheckBox.Content = "Hide";
+        }
+
+        private void ShowApiKeyCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ApiKeyBox.Password = ApiKeyTextBox.Text;
+            ApiKeyTextBox.Visibility = Visibility.Collapsed;
+            ApiKeyBox.Visibility = Visibility.Visible;
+            ShowApiKeyCheckBox.Content = "Show";
+        }
+
+        private void ShowCleanupApiKeyCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            CleanupApiKeyTextBox.Text = CleanupApiKeyBox.Password;
+            CleanupApiKeyTextBox.Visibility = Visibility.Visible;
+            CleanupApiKeyBox.Visibility = Visibility.Collapsed;
+            ShowCleanupApiKeyCheckBox.Content = "Hide";
+        }
+
+        private void ShowCleanupApiKeyCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            CleanupApiKeyBox.Password = CleanupApiKeyTextBox.Text;
+            CleanupApiKeyTextBox.Visibility = Visibility.Collapsed;
+            CleanupApiKeyBox.Visibility = Visibility.Visible;
+            ShowCleanupApiKeyCheckBox.Content = "Show";
+        }
+
+         private void ShowSummarizeApiKeyCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            SummarizeApiKeyTextBox.Text = SummarizeApiKeyBox.Password;
+            SummarizeApiKeyTextBox.Visibility = Visibility.Visible;
+            SummarizeApiKeyBox.Visibility = Visibility.Collapsed;
+            ShowSummarizeApiKeyCheckBox.Content = "Hide";
+        }
+
+        private void ShowSummarizeApiKeyCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SummarizeApiKeyBox.Password = SummarizeApiKeyTextBox.Text;
+            SummarizeApiKeyTextBox.Visibility = Visibility.Collapsed;
+            SummarizeApiKeyBox.Visibility = Visibility.Visible;
+            ShowSummarizeApiKeyCheckBox.Content = "Show";
+        }
+
+        // --- End API Key Visibility Toggle Handlers ---
+
+        // --- About Tab Logic ---
+        private void ViewLicenseButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Assuming LICENSE file is in the same directory as the executable
+                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                string licenseFilePath = Path.Combine(baseDirectory, "LICENSE");
+
+                if (File.Exists(licenseFilePath))
+                {
+                    Logger.Info($"Opening LICENSE file: {licenseFilePath}");
+                    Process.Start(licenseFilePath);
+                }
+                else
+                {
+                    Logger.Warning($"LICENSE file not found at: {licenseFilePath}");
+                    System.Windows.MessageBox.Show("LICENSE file not found.", "File Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Failed to open LICENSE file.", ex);
+                System.Windows.MessageBox.Show($"Could not open LICENSE file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        // --- End About Tab Logic ---
+
 
         // Helper to find ComboBoxItem by content
         private System.Windows.Controls.ComboBoxItem FindComboBoxItem(System.Windows.Controls.ComboBox comboBox, string content)

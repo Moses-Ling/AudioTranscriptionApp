@@ -15,7 +15,8 @@ namespace AudioTranscriptionApp.Services
         private WaveFileWriter _writer;
         private string _tempFilePath;
         private bool _isRecording = false;
-        private DateTime _recordingStartTime;
+        private DateTime _chunkStartTime; // Start time of the current chunk file
+        private DateTime _sessionStartTime; // Start time of the entire recording session
         private int _audioChunkSeconds; // Process in configurable chunks
         private readonly TranscriptionService _transcriptionService;
 
@@ -29,8 +30,10 @@ namespace AudioTranscriptionApp.Services
         public event EventHandler<string> TranscriptionReceived;
         public event EventHandler<string> StatusChanged;
         public event EventHandler<Exception> ErrorOccurred;
+        public event EventHandler<TimeSpan> RecordingTimeUpdate; // Added event for timer
 
         public bool IsRecording => _isRecording;
+        public TimeSpan RecordedDuration { get; private set; } // To store final duration
 
         public AudioCaptureService(TranscriptionService transcriptionService)
         {
@@ -151,9 +154,13 @@ namespace AudioTranscriptionApp.Services
 
                     // Start recording
                     Logger.Info("Calling _capture.StartRecording().");
+                    // Start recording
+                    _sessionStartTime = DateTime.Now; // Set session start time
+                    _chunkStartTime = _sessionStartTime; // First chunk starts now
+                    RecordedDuration = TimeSpan.Zero; // Reset duration
+                    Logger.Info("Calling _capture.StartRecording().");
                     _capture.StartRecording();
 
-                    _recordingStartTime = DateTime.Now;
 
                     StatusChanged?.Invoke(this, "Recording and transcribing...");
                     Logger.Info("Recording started successfully.");
@@ -188,12 +195,22 @@ namespace AudioTranscriptionApp.Services
                 // Calculate audio level for visualization
                 CalculateAudioLevel(e.Buffer, e.BytesRecorded);
 
-                // Check if we've reached the chunk duration
-                TimeSpan elapsed = DateTime.Now - _recordingStartTime;
-                if (elapsed.TotalSeconds >= _audioChunkSeconds)
+                // Update TOTAL elapsed time and raise event
+                TimeSpan totalElapsed = DateTime.Now - _sessionStartTime;
+                RecordedDuration = totalElapsed; // Keep track of total duration
+                // Raise event periodically (e.g., every ~500ms) - simple check for now
+                 // Basic throttle, only update twice a second approx (can be improved with a dedicated Timer if needed)
+                if (totalElapsed.Milliseconds < 500 || totalElapsed.Milliseconds >= 500 && totalElapsed.Milliseconds < 550)
                 {
-                    // Logger.Info($"Audio chunk duration ({_audioChunkSeconds}s) reached. Processing chunk."); // Too verbose
-                    ProcessCurrentAudioChunk();
+                     RecordingTimeUpdate?.Invoke(this, totalElapsed);
+                }
+
+
+                // Check if the CURRENT CHUNK has reached the duration
+                TimeSpan chunkElapsed = DateTime.Now - _chunkStartTime;
+                if (chunkElapsed.TotalSeconds >= _audioChunkSeconds)
+                {
+                    ProcessCurrentAudioChunk(); // This resets _chunkStartTime via CreateNewAudioFile
                 }
             }
         }
@@ -306,7 +323,7 @@ namespace AudioTranscriptionApp.Services
             {
                 _tempFilePath = Path.Combine(Path.GetTempPath(), $"audio_chunk_{DateTime.Now.Ticks}.wav");
                 _writer = new WaveFileWriter(_tempFilePath, _capture.WaveFormat);
-                _recordingStartTime = DateTime.Now;
+                _chunkStartTime = DateTime.Now; // Reset chunk start time
                 Logger.Info($"Created new audio chunk file: {_tempFilePath}");
             }
             catch (Exception ex)
@@ -349,8 +366,8 @@ namespace AudioTranscriptionApp.Services
             }
 
             _isRecording = false;
+            // Final duration is already stored in RecordedDuration before stop was called
             // Status is updated after final chunk processing now
-            // StatusChanged?.Invoke(this, "Recording stopped. Processing final chunk...");
             AudioLevelChanged?.Invoke(this, 0);
 
             if (e.Exception != null)

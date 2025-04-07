@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿<?xml version='1.0' encoding='utf-8'?>
+﻿﻿﻿﻿﻿﻿﻿<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AudioTranscriptionApp.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -28,6 +28,15 @@ Note unclear areas: If a sentence doesn't make sense or you had to make a guess 
 Output two sections:
 Clean Transcript – The cleaned-up version ready for summarization.
 Editor Notes – A list of sentences or phrases that were unclear or required assumption/guesswork, along with a brief note.</Value>
+    </Setting>
+    <Setting Name="SummarizeApiKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SummarizeModel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">gpt-4o</Value> <!-- Changed default -->
+    </Setting>
+    <Setting Name="SummarizePrompt" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Summarize the following meeting transcript by identifying the key discussion points, action items, decisions made, and any follow-up tasks. Keep the summary concise and structured, using bullet points or sections if necessary. Focus on clarity and relevance.</Value>
     </Setting>
   </Settings>
 </SettingsFile>

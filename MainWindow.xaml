@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioTranscriptionApp"
-        Title="Audio Transcription App" Height="500" Width="800"
-        Closing="Window_Closing">
+        Title="ClioAi" Height="500" Width="800"
+        Closing="Window_Closing" Icon="clio_ai_icon.ico">
+        <!-- Updated Title, Added Window Icon -->
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -16,15 +17,20 @@
         </Grid.RowDefinitions>
 
         <!-- Top Controls -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button x:Name="StartButton" Content="Start Recording" Width="120" Height="30" Margin="0,0,10,0" Click="StartButton_Click"/>
-            <Button x:Name="StopButton" Content="Stop Recording" Width="120" Height="30" Margin="0,0,10,0" Click="StopButton_Click"/>
-            <Button x:Name="CleanupButton" Content="Clean Up" Width="120" Height="30" Margin="0,0,10,0" Click="CleanupButton_Click" IsEnabled="False"/> <!-- Renamed, Changed Content, initially disabled -->
-            <Button x:Name="ClearButton" Content="Clear Transcript" Width="120" Height="30" Margin="0,0,10,0" Click="ClearButton_Click"/>
+        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,10">
+            <!-- Right Aligned Buttons -->
+            <Button DockPanel.Dock="Right" x:Name="SettingsButton" Content="Settings" Width="80" Height="30" Click="SettingsButton_Click" Margin="5,0,0,0"/>
+            <Button DockPanel.Dock="Right" x:Name="ClearButton" Content="Clear" Width="80" Height="30" Click="ClearButton_Click"/> <!-- Renamed & Right Aligned -->
+
+            <!-- Left Aligned Buttons -->
+            <Button DockPanel.Dock="Left" x:Name="StartButton" Content="Start" Width="80" Height="30" Margin="0,0,5,0" Click="StartButton_Click"/> <!-- Renamed -->
+            <Button DockPanel.Dock="Left" x:Name="StopButton" Content="Stop" Width="80" Height="30" Margin="0,0,5,0" Click="StopButton_Click"/> <!-- Renamed -->
+            <Button DockPanel.Dock="Left" x:Name="CleanupButton" Content="Clean Up" Width="80" Height="30" Margin="0,0,5,0" Click="CleanupButton_Click" IsEnabled="False"/>
+            <Button DockPanel.Dock="Left" x:Name="SummarizeButton" Content="Summarize" Width="80" Height="30" Margin="0,0,5,0" Click="SummarizeButton_Click" IsEnabled="False"/>
 
             <!-- API Key Input Removed - Handled in Settings -->
-            <Button x:Name="SettingsButton" Content="Settings" Width="80" Height="30" Click="SettingsButton_Click" Margin="10,0,0,0"/>
-        </StackPanel>
+            <!-- Spacer or remaining elements could go here if LastChildFill="True" -->
+        </DockPanel>
 
         <!-- Audio Device Selection -->
         <Grid Grid.Row="1" Margin="0,0,0,10">
@@ -55,6 +61,16 @@
         </Border>
 
         <!-- Status Bar -->
-        <TextBlock x:Name="StatusTextBlock" Grid.Row="4" Text="Audio devices refreshed." VerticalAlignment="Center"/>
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/> <!-- Text takes available space -->
+                <ColumnDefinition Width="Auto"/> <!-- Timer takes needed space -->
+                <ColumnDefinition Width="Auto"/> <!-- Progress bar takes needed space -->
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="StatusTextBlock" Grid.Column="0" Text="Ready." VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock x:Name="ElapsedTimeTextBlock" Grid.Column="1" Text="" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed"/> <!-- Added Timer TextBlock -->
+            <ProgressBar x:Name="BusyIndicator" Grid.Column="2" IsIndeterminate="True" Visibility="Collapsed" Height="15" Width="100" VerticalAlignment="Center"/>
+        </Grid>
     </Grid>
 </Window>
